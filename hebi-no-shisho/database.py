@@ -5,6 +5,24 @@ def init():
     connection_string = 'sqlite:' + os.path.abspath('data.db')
     sqlhub.processConnection = connectionForURI(connection_string)
 
+def isValid():
+    ''' Check whether the database is ready for use '''
+    if not Book.tableExists():
+        return False
+    if not Barcode.tableExists():
+        return False
+    if not Student.tableExists():
+        return False
+    if not Loan.tableExists():
+        return False
+    return True
+
+def createTables():
+    Book.createTable(ifNotExists=True)
+    Barcode.createTable(ifNotExists=True)
+    Student.createTable(ifNotExists=True)
+    Loan.createTable(ifNotExists=True)
+
 class Book(SQLObject):
     title = StringCol(notNone=True)
     author = StringCol()

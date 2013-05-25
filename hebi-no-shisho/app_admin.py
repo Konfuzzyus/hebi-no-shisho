@@ -5,6 +5,4 @@ class AppAdmin(object):
         database.init()
 
     def run(self):
-        if not database.Book.tableExists():
-            database.Book.createTable()
-        return 0
+        database.createTables()
