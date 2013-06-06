@@ -1,7 +1,7 @@
 from sqlobject import * #@UnusedWildImport
 import os
 
-from passlib.hash import sha512_crypt
+from passlib.hash import sha256_crypt
 
 class PermissionViolation(Exception):
     pass
@@ -34,7 +34,7 @@ class Database():
         
     def set_password(self, new_password):
         ''' Sets the password in the database to a new one '''
-        my_hash = sha512_crypt.encrypt(new_password)
+        my_hash = sha256_crypt.encrypt(new_password)
         result = Configuration.select(Configuration.q.key == Database.__password_key)
         if result.count() == 0:
             Configuration(key=Database.__password_key, value=my_hash)
@@ -45,7 +45,7 @@ class Database():
         ''' Check whether the given password matches the one stored in the database '''
         try:
             result = Configuration.select(Configuration.q.key == Database.__password_key).getOne()
-            return sha512_crypt.verify(password, result.value)
+            return sha256_crypt.verify(password, result.value)
         except SQLObjectNotFound:
             raise DatabaseIntegrityError('Password entry missing from configuration table')
     

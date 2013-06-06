@@ -5,7 +5,7 @@ import gtk
 
 class ShishoApp():
     def __init__(self):
-        database.init('data.db')
+        self.database = database.Database('data.db')
         self.window = MainWindow()
 
     def main(self):

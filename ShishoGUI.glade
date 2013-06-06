@@ -92,6 +92,9 @@
           <object class="GtkEntry" id="entBarcodeInput">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="can_default">True</property>
+            <property name="has_default">True</property>
+            <property name="receives_default">True</property>
             <property name="invisible_char">●</property>
             <property name="primary_icon_activatable">False</property>
             <property name="secondary_icon_activatable">False</property>
@@ -115,6 +118,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="left_padding">12</property>
+                <property name="right_padding">12</property>
                 <child>
                   <object class="GtkHBox" id="hboBookActions">
                     <property name="visible">True</property>
@@ -123,7 +127,7 @@
                       <object class="GtkButton" id="btnBorrowBook">
                         <property name="label" translatable="yes">Borrow</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
+                        <property name="can_focus">False</property>
                         <property name="receives_default">True</property>
                         <property name="use_action_appearance">False</property>
                       </object>
@@ -137,7 +141,7 @@
                       <object class="GtkButton" id="btnReturnBook">
                         <property name="label" translatable="yes">Return</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
+                        <property name="can_focus">False</property>
                         <property name="receives_default">True</property>
                         <property name="use_action_appearance">False</property>
                       </object>
@@ -171,7 +175,7 @@
           <object class="GtkButton" id="btnSearch">
             <property name="label" translatable="yes">Search</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
+            <property name="can_focus">False</property>
             <property name="receives_default">True</property>
             <property name="use_action_appearance">False</property>
           </object>
@@ -210,30 +214,6 @@
             <property name="expand">True</property>
             <property name="fill">True</property>
             <property name="position">4</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkStatusbar" id="staStatusBar">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="spacing">2</property>
-            <child>
-              <object class="GtkLabel" id="labDatabaseStatus">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">database not initialized</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">5</property>
           </packing>
         </child>
       </object>
