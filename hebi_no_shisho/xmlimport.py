@@ -21,6 +21,9 @@ class FileMakerXMLData:
     def clear(self):
         self.__keys = []
         self.__data = []
+    
+    def get_data(self):
+        return self.__data
 
     def __import_metadata(self):
         root = self.__tree.getroot()
@@ -49,15 +52,15 @@ class FileMakerXMLData:
     def __import_row(self, row):
         columns = row.findall('./fmp:COL', namespaces=self.ns)
         if len(columns) != len(self.__keys):
-            raise ImportException('ROW element needs to contain exactly %(0)d COL elements but contains only %(0)d COL elements') % {'0': len(columns), '1': len(self.__keys)}
+            raise ImportException('ROW element needs to contain exactly %(0)d COL elements but contains only %(1)d COL elements' % {'0': len(columns), '1': len(self.__keys)})
         
         item = {}
         col_index = 0
         for col in columns:
-            data = col.find('./fmp:DATA', namespaces=self.ns)
-            if data is None:
-                raise ImportException('DATA element missing from COL element')
-            item[self.__keys[col_index]] = data.text
+            data_list = []
+            for data in col.findall('./fmp:DATA', namespaces=self.ns):
+                data_list.append(data.text)
+            item[self.__keys[col_index]] = data_list
             col_index += 1
         self.__data.append(item)
 
@@ -66,13 +69,173 @@ class FileMakerXMLData:
 # Testing
 #------------------------------------------------------------------------------
 import unittest
+import tempfile
 
-class TestSequenceFunctions(unittest.TestCase):
+class TestFileMakerXMLData(unittest.TestCase):
 
-    def test_import(self):
-        testfile = os.path.abspath(os.path.join('external_data', 'benutzer.xml'))
-        FileMakerXMLData(testfile)
-        testfile = os.path.abspath(os.path.join('external_data', 'ausleihe2.xml'))
-        FileMakerXMLData(testfile)
-        testfile = os.path.abspath(os.path.join('external_data', 'medien.xml'))
-        FileMakerXMLData(testfile)
+    def create_testfile(self, xml_data):
+        handle, path = tempfile.mkstemp()
+        os.write(handle, xml_data)
+        os.close(handle)
+        return path
+    
+    def build_loader(self, xmlfile):
+        return FileMakerXMLData(xmlfile)
+
+    def test_valid_import(self):
+        xml_data = """<?xml version="1.0" encoding="UTF-8" ?>
+            <FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
+                <ERRORCODE>0</ERRORCODE>
+                <PRODUCT BUILD="27/11/2002" NAME="FileMaker Pro" VERSION="6.0Dv4"/>
+                <DATABASE DATEFORMAT="d.M.yyyy" LAYOUT="" NAME="B4Benutzer.fp5" RECORDS="1596" TIMEFORMAT="k:mm:ss "/>
+                <METADATA>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Message" TYPE="TEXT"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Number" TYPE="NUMBER"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Timestamp" TYPE="DATE"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="5" NAME="Authors" TYPE="TEXT"/>
+                </METADATA>
+                <RESULTSET FOUND="3">
+                    <ROW MODID="0" RECORDID="1">
+                        <COL>
+                            <DATA>This is some Text</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>42</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>1.12.2013</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>Alice</DATA>
+                            <DATA>Bob</DATA>
+                            <DATA>Dave</DATA>
+                        </COL>
+                    </ROW>
+                    <ROW MODID="0" RECORDID="2">
+                        <COL>
+                            <DATA>This is some more Text</DATA>
+                        </COL>
+                        <COL>
+                        </COL>
+                        <COL>
+                            <DATA>30.1.2012</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>Ed</DATA>
+                        </COL>
+                    </ROW>
+                </RESULTSET>
+            </FMPXMLRESULT>
+        """
+        
+        path = self.create_testfile(xml_data)
+        
+        loader = FileMakerXMLData(path)
+        data = loader.get_data()
+        for row in data:
+            self.assertTrue('Message' in row)
+            self.assertTrue('Number' in row)
+            self.assertTrue('Timestamp' in row)
+            self.assertTrue('Authors' in row)
+            self.assertEqual(4, len(row))
+        
+        self.assertEqual(data[0]['Message'], ['This is some Text'])
+        self.assertEqual(data[0]['Number'], ['42'])
+        self.assertEqual(data[0]['Timestamp'], ['1.12.2013'])
+        self.assertEqual(data[0]['Authors'], ['Alice', 'Bob', 'Dave'])
+        
+        self.assertEqual(data[1]['Message'], ['This is some more Text'])
+        self.assertEqual(data[1]['Number'], [])
+        self.assertEqual(data[1]['Timestamp'], ['30.1.2012'])
+        self.assertEqual(data[1]['Authors'], ['Ed'])
+        
+        os.remove(path)
+        
+    def test_missing_resultset(self):
+        xml_data = """<?xml version="1.0" encoding="UTF-8" ?>
+            <FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
+                <ERRORCODE>0</ERRORCODE>
+                <PRODUCT BUILD="27/11/2002" NAME="FileMaker Pro" VERSION="6.0Dv4"/>
+                <DATABASE DATEFORMAT="d.M.yyyy" LAYOUT="" NAME="B4Benutzer.fp5" RECORDS="1596" TIMEFORMAT="k:mm:ss "/>
+                <METADATA>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Message" TYPE="TEXT"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Number" TYPE="NUMBER"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Timestamp" TYPE="DATE"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="5" NAME="Authors" TYPE="TEXT"/>
+                </METADATA>
+            </FMPXMLRESULT>
+        """
+        
+        path = self.create_testfile(xml_data)
+        self.assertRaises(ImportException, self.build_loader, (path))
+        os.remove(path)
+
+    def test_missing_metadata(self):
+        xml_data = """<?xml version="1.0" encoding="UTF-8" ?>
+            <FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
+                <ERRORCODE>0</ERRORCODE>
+                <PRODUCT BUILD="27/11/2002" NAME="FileMaker Pro" VERSION="6.0Dv4"/>
+                <DATABASE DATEFORMAT="d.M.yyyy" LAYOUT="" NAME="B4Benutzer.fp5" RECORDS="1596" TIMEFORMAT="k:mm:ss "/>
+                <RESULTSET FOUND="3">
+                    <ROW MODID="0" RECORDID="1">
+                        <COL>
+                            <DATA>This is some Text</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>42</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>1.12.2013</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>Alice</DATA>
+                            <DATA>Bob</DATA>
+                            <DATA>Dave</DATA>
+                        </COL>
+                    </ROW>
+                </RESULTSET>
+            </FMPXMLRESULT>
+        """
+        
+        path = self.create_testfile(xml_data)
+        self.assertRaises(ImportException, self.build_loader, (path))
+        os.remove(path)
+    
+    def test_missing_col(self):
+        xml_data = """<?xml version="1.0" encoding="UTF-8" ?>
+            <FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
+                <ERRORCODE>0</ERRORCODE>
+                <PRODUCT BUILD="27/11/2002" NAME="FileMaker Pro" VERSION="6.0Dv4"/>
+                <DATABASE DATEFORMAT="d.M.yyyy" LAYOUT="" NAME="B4Benutzer.fp5" RECORDS="1596" TIMEFORMAT="k:mm:ss "/>
+                <METADATA>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Message" TYPE="TEXT"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Number" TYPE="NUMBER"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Timestamp" TYPE="DATE"/>
+                    <FIELD EMPTYOK="YES" MAXREPEAT="5" NAME="Authors" TYPE="TEXT"/>
+                </METADATA>
+                <RESULTSET FOUND="3">
+                    <ROW MODID="0" RECORDID="1">
+                        <COL>
+                            <DATA>This is some Text</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>42</DATA>
+                        </COL>
+                        <COL>
+                            <DATA>Alice</DATA>
+                            <DATA>Bob</DATA>
+                            <DATA>Dave</DATA>
+                        </COL>
+                    </ROW>
+                </RESULTSET>
+            </FMPXMLRESULT>
+        """
+        
+        path = self.create_testfile(xml_data)
+        self.assertRaises(ImportException, self.build_loader, (path))
+        os.remove(path)
+    
+    def test_file_not_found(self):
+        path = self.create_testfile("Empty")
+        os.remove(path)
+        self.assertRaises(ImportException, self.build_loader, (path))
