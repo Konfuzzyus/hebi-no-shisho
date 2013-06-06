@@ -1,8 +1,8 @@
 from sqlobject import * #@UnusedWildImport
 import os
 
-def init():
-    connection_string = 'sqlite:' + os.path.abspath('data.db')
+def init(filename):
+    connection_string = 'sqlite:' + os.path.abspath(filename)
     sqlhub.processConnection = connectionForURI(connection_string)
 
 def isValid():
