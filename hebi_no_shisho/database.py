@@ -1,27 +1,81 @@
 from sqlobject import * #@UnusedWildImport
 import os
 
-def init(filename):
-    connection_string = 'sqlite:' + os.path.abspath(filename)
-    sqlhub.processConnection = connectionForURI(connection_string)
+from passlib.hash import sha512_crypt
 
-def isValid():
-    ''' Check whether the database is ready for use '''
-    if not Book.tableExists():
-        return False
-    if not Barcode.tableExists():
-        return False
-    if not Student.tableExists():
-        return False
-    if not Loan.tableExists():
-        return False
-    return True
+class PermissionViolation(Exception):
+    pass
 
-def createTables():
-    Book.createTable(ifNotExists=True)
-    Barcode.createTable(ifNotExists=True)
-    Student.createTable(ifNotExists=True)
-    Loan.createTable(ifNotExists=True)
+class DatabaseIntegrityError(Exception):
+    pass
+
+class Database():
+    __password_key = 'password'
+
+    def __init__(self, filename):
+        if filename == ':memory:':
+            connection_string = 'sqlite:/:memory:'
+        else:
+            connection_string = 'sqlite:' + os.path.abspath(filename)
+        sqlhub.processConnection = connectionForURI(connection_string)
+    
+    def erase_database(self):
+        Book.dropTable(ifExists=True)
+        Barcode.dropTable(ifExists=True)
+        Student.dropTable(ifExists=True)
+        Loan.dropTable(ifExists=True)
+        Configuration.dropTable(ifExists=True)
+    
+    def reset_database(self, new_password):
+        ''' Resets the database and sets a new password '''
+        self.erase_database()
+        self.create_tables()
+        self.set_password(new_password)
+        
+    def set_password(self, new_password):
+        ''' Sets the password in the database to a new one '''
+        my_hash = sha512_crypt.encrypt(new_password)
+        result = Configuration.select(Configuration.q.key == Database.__password_key)
+        if result.count() == 0:
+            Configuration(key=Database.__password_key, value=my_hash)
+        else:
+            result.getOne().value = my_hash
+    
+    def check_password(self, password):
+        ''' Check whether the given password matches the one stored in the database '''
+        try:
+            result = Configuration.select(Configuration.q.key == Database.__password_key).getOne()
+            return sha512_crypt.verify(password, result.value)
+        except SQLObjectNotFound:
+            raise DatabaseIntegrityError('Password entry missing from configuration table')
+    
+    def is_valid(self):
+        ''' Check whether the database is ready for use '''
+        if not Book.tableExists():
+            return False
+        if not Barcode.tableExists():
+            return False
+        if not Student.tableExists():
+            return False
+        if not Loan.tableExists():
+            return False
+        if not Configuration.tableExists():
+            return False
+        result = Configuration.select(Configuration.q.key == Database.__password_key)
+        if result.count() == 0:
+            return False
+        return True
+    
+    def create_tables(self):
+        Configuration.createTable(ifNotExists=True)
+        Book.createTable(ifNotExists=True)
+        Barcode.createTable(ifNotExists=True)
+        Student.createTable(ifNotExists=True)
+        Loan.createTable(ifNotExists=True)
+
+class Configuration(SQLObject):
+    key = StringCol(notNone=True, unique=True)
+    value = StringCol()
 
 class Book(SQLObject):
     title = StringCol(notNone=True)
@@ -43,3 +97,23 @@ class Loan(SQLObject):
     book = ForeignKey('Book', cascade=True, unique=True, notNone=True)
     borrower = ForeignKey('Student', cascade=False, notNone=True)
     loanDate = DateCol(notNone=True)
+
+
+#------------------------------------------------------------------------------
+# Testing
+#------------------------------------------------------------------------------
+import unittest
+
+class TestDatabase(unittest.TestCase):
+
+    def setUp(self):
+        self.database = Database(':memory:')
+        
+    def test_database_setup(self):
+        my_password = 'this_is_sparta'
+        not_my_password = 'such_is_life'
+        self.assertFalse(self.database.is_valid())
+        self.database.reset_database(my_password)
+        self.assertTrue(self.database.check_password(my_password))
+        self.assertFalse(self.database.check_password(not_my_password))
+        self.assertTrue(self.database.is_valid())
