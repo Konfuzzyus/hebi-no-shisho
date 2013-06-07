@@ -24,20 +24,54 @@ import gtk
 class ShishoApp():
     def __init__(self):
         self.database = database.Database('data.db')
-        self.window = MainWindow()
+        
+        self.builder = gtk.Builder() 
+        self.builder.add_from_file('ShishoGUI.glade')
+        
+        self.setup_main()
+        self.setup_about()
+        self.setup_password_entry()
+        
+        self.win_main.show()
 
     def main(self):
         gtk.main()
 
-class MainWindow():
-    def __init__(self):
-        self.gladefile = 'ShishoGUI.glade'
-        self.builder = gtk.Builder() 
-        self.builder.add_from_file(self.gladefile)
         
-        dic = { "on_FileMenuQuit_activate" : gtk.main_quit}
+    def setup_main(self):
+        self.win_main = self.builder.get_object("winMain")
+        self.win_main.connect("destroy", gtk.main_quit)
+        dic = { "on_FileMenuQuit_activate" : gtk.main_quit,
+                "on_FileMenuAdminMode_activate": self.enter_admin_mode,
+                "on_HelpMenuAbout_activate": self.show_about}
         self.builder.connect_signals(dic, None)
-        
-        window = self.builder.get_object("winMain")
-        window.show()
         return
+
+    def setup_about(self):
+        self.win_about = self.builder.get_object("dlgAbout")
+        
+    def setup_password_entry(self):
+        self.win_password = self.builder.get_object("dlgPasswordEntry")
+        self.win_password_entry = self.builder.get_object("entPassword")
+        self.win_password_label = self.builder.get_object("lblPasswordEntry")
+
+    def enter_admin_mode(self, widget):
+        if self.database.is_valid():
+            self.win_password_label.set_text('Login')
+            self.win_password_entry.set_text('')
+            result = self.win_password.run()
+            if result == 1:
+                if self.database.check_password(self.win_password_entry.get_text()):
+                    print 'Success!'
+                else:
+                    print 'FAIL'
+        else:
+            self.win_password_label.set_text('Create')
+            result = self.win_password.run()
+            if result == 1:
+                self.database.reset_database(self.win_password_entry.get_text())
+        self.win_password.hide()
+
+    def show_about(self, widget):
+        self.win_about.run()
+        self.win_about.hide()
