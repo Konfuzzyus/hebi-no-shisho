@@ -38,9 +38,8 @@ class Database():
         sqlhub.processConnection = connectionForURI(connection_string)
     
     def erase_database(self):
-        Book.dropTable(ifExists=True)
-        Barcode.dropTable(ifExists=True)
-        Student.dropTable(ifExists=True)
+        Media.dropTable(ifExists=True)
+        User.dropTable(ifExists=True)
         Loan.dropTable(ifExists=True)
         Configuration.dropTable(ifExists=True)
     
@@ -69,11 +68,9 @@ class Database():
     
     def is_valid(self):
         ''' Check whether the database is ready for use '''
-        if not Book.tableExists():
+        if not Media.tableExists():
             return False
-        if not Barcode.tableExists():
-            return False
-        if not Student.tableExists():
+        if not User.tableExists():
             return False
         if not Loan.tableExists():
             return False
@@ -86,34 +83,36 @@ class Database():
     
     def create_tables(self):
         Configuration.createTable(ifNotExists=True)
-        Book.createTable(ifNotExists=True)
-        Barcode.createTable(ifNotExists=True)
-        Student.createTable(ifNotExists=True)
+        Media.createTable(ifNotExists=True)
+        User.createTable(ifNotExists=True)
         Loan.createTable(ifNotExists=True)
+    
+    def add_user(self, **kwargs):
+        User(**kwargs)
+
+    def add_media(self, **kwargs):
+        Media(**kwargs)
 
 class Configuration(SQLObject):
     key = StringCol(notNone=True, unique=True)
     value = StringCol()
 
-class Book(SQLObject):
+class Media(SQLObject):
     title = StringCol(notNone=True)
     author = StringCol()
-    isbn = StringCol(notNone=True, unique=True)
-    barcode = ForeignKey('Barcode', cascade='null')
-    onLoan = SingleJoin('Loan')
+    isbn = StringCol(notNone=True)
+    barcode = StringCol(unique=True, notNone=True)
 
-class Barcode(SQLObject):
-    code = StringCol(notNone=True, unique=True)
-
-class Student(SQLObject):
-    name = StringCol(notNone=True)
+class User(SQLObject):
+    first_name = StringCol(notNone=True)
+    last_name = StringCol(notNone=True)
     form = StringCol(notNone=True)
-    barcode = ForeignKey('Barcode', cascade='null')
     loans = MultipleJoin('Loan')
+    barcode = StringCol(notNone=True, unique=True)
 
 class Loan(SQLObject):
-    book = ForeignKey('Book', cascade=True, unique=True, notNone=True)
-    borrower = ForeignKey('Student', cascade=False, notNone=True)
+    book = ForeignKey('Media', cascade=True, unique=True, notNone=True)
+    borrower = ForeignKey('User', cascade=False, notNone=True)
     loanDate = DateCol(notNone=True)
 
 

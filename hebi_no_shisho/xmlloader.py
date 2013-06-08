@@ -19,7 +19,7 @@
 import xml.etree.ElementTree as ET
 import os
 
-class ImportException(Exception):
+class LoadException(Exception):
     pass
 
 class FileMakerXMLData:
@@ -31,7 +31,7 @@ class FileMakerXMLData:
         if os.path.isfile(filename):
             self.__tree = ET.parse(filename)
         else:
-            raise ImportException('File %(0)s not found' % {'0': filename})
+            raise LoadException('File %(0)s not found' % {'0': filename})
        
         self.__import_metadata()
         self.__import_resultset()
@@ -47,7 +47,7 @@ class FileMakerXMLData:
         root = self.__tree.getroot()
         node = root.find('./fmp:METADATA', namespaces=self.ns)
         if node is None:
-            raise ImportException('XML Data file does not contain a METADATA element')
+            raise LoadException('XML Data file does not contain a METADATA element')
         
         for field in node.findall('./fmp:FIELD', namespaces=self.ns):
             self.__keys.append(field.attrib['NAME'])
@@ -57,7 +57,7 @@ class FileMakerXMLData:
         root = self.__tree.getroot()
         node = root.find('./fmp:RESULTSET', namespaces=self.ns)
         if node is None:
-            raise ImportException('XML Data file does not contain a RESULTSET element')
+            raise LoadException('XML Data file does not contain a RESULTSET element')
         
         num_rows = int(node.attrib['FOUND'])
         print 'Found result set containing %(0)d rows' % {'0': num_rows}
@@ -70,7 +70,7 @@ class FileMakerXMLData:
     def __import_row(self, row):
         columns = row.findall('./fmp:COL', namespaces=self.ns)
         if len(columns) != len(self.__keys):
-            raise ImportException('ROW element needs to contain exactly %(0)d COL elements but contains only %(1)d COL elements' % {'0': len(columns), '1': len(self.__keys)})
+            raise LoadException('ROW element needs to contain exactly %(0)d COL elements but contains only %(1)d COL elements' % {'0': len(columns), '1': len(self.__keys)})
         
         item = {}
         col_index = 0
@@ -185,7 +185,7 @@ class TestFileMakerXMLData(unittest.TestCase):
         """
         
         path = self.create_testfile(xml_data)
-        self.assertRaises(ImportException, self.build_loader, (path))
+        self.assertRaises(LoadException, self.build_loader, (path))
         os.remove(path)
 
     def test_missing_metadata(self):
@@ -216,7 +216,7 @@ class TestFileMakerXMLData(unittest.TestCase):
         """
         
         path = self.create_testfile(xml_data)
-        self.assertRaises(ImportException, self.build_loader, (path))
+        self.assertRaises(LoadException, self.build_loader, (path))
         os.remove(path)
     
     def test_missing_col(self):
@@ -250,10 +250,10 @@ class TestFileMakerXMLData(unittest.TestCase):
         """
         
         path = self.create_testfile(xml_data)
-        self.assertRaises(ImportException, self.build_loader, (path))
+        self.assertRaises(LoadException, self.build_loader, (path))
         os.remove(path)
     
     def test_file_not_found(self):
         path = self.create_testfile("Empty")
         os.remove(path)
-        self.assertRaises(ImportException, self.build_loader, (path))
+        self.assertRaises(LoadException, self.build_loader, (path))
