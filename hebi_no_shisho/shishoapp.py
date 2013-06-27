@@ -16,9 +16,22 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import shishoapp
-import sys
+from PyQt4 import QtGui
+import mainwindow
+import database
+import os
 
-if __name__ == '__main__':
-    app = shishoapp.ShishoApplication(sys.argv)
-    sys.exit(app.run())
+class ShishoApplication(QtGui.QApplication):
+    def __init__(self, *args, **kw):
+        super(ShishoApplication, self).__init__(*args, **kw)
+        
+        self.__localpath = os.path.expanduser(os.path.join('~', '.hebi-no-shisho'))
+        if not os.path.isdir(self.__localpath):
+            os.makedirs(self.__localpath)
+        
+        self.__database = database.Database(os.path.join(self.__localpath, 'database.db'))
+        self.__rootwindow = mainwindow.MainWindow(self.__database)
+
+    def run(self):
+        self.__rootwindow.show()
+        return self.exec_()
