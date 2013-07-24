@@ -16,11 +16,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-class XMLDataImporter:
+import isbn
+
+class XMLDataImportError(Exception):
+    pass
+
+class ISBNDemanglingError(Exception):
+    pass
+
+class FileMakerXMLDataImporter:
     def __init__(self, database):
         self.__database = database
 
-    def import_users(self, xmldata):
+    def import_user_table(self, xmldata):
         for user in xmldata:
             try:
                 self.__database.add_user(first_name=' '.join(user['Vorname']),
@@ -30,88 +38,56 @@ class XMLDataImporter:
             except:
                 raise
 
-    def import_media(self, xmldata):
-        for media in xmldata:
+    def import_media_table(self, xmldata):
+        error_count = 0
+        for row in xmldata:
             try:
-                self.__database.add_media(title=' '.join(media['Titel']),
-                                          author=' '.join(media['Urheber']),
-                                          isbn=' '.join(media['ISBN']),
-                                          barcode=' '.join(media['Strichcode Medien']))
-            except:
-                raise
+                self.import_media_row(row)
+            except XMLDataImportError as error:
+                print "Unable to import %s: %s" % (row, error)
+                error_count += 1
+        print "Failed to import %d of %d rows" % (error_count, len(xmldata))
 
-    def import_loans(self, xmldata):
+    def import_loan_table(self, xmldata):
         pass
 
 
-#------------------------------------------------------------------------------
-# Testing
-#------------------------------------------------------------------------------
-import unittest
-import database
-import os
-import tempfile
-
-class TestXMLDataImporter(unittest.TestCase):
-
-    def create_testfile(self, xml_data):
-        handle, path = tempfile.mkstemp()
-        os.write(handle, xml_data)
-        os.close(handle)
-        return path
-
-    def setUp(self):
-        self.__testbase = database.Database(':memory:')
-        self.__testbase.reset_database('test')
-
-    def test_import_users(self):
-        importer = XMLDataImporter(self.__testbase)
-        testdata = [ {'Name': ['Miller'],
-                      'Vorname': ['Alice'],
-                      'Klasse': ['B1a'],
-                      'Nummer': ['12'],
-                      'Strasse': ['Old Street'],
-                      'PLZ': ['12345'],
-                      'Wohnort': ['Testtown'],
-                      'Lehrer': ['Stevenson'],
-                      'Benutzercode': ['*54321*'],
-                      'Bemerkungen': ['']
-                     },
-                     {'Name': ['Smith'],
-                      'Vorname': ['Bob'],
-                      'Klasse': ['B1a'],
-                      'Nummer': ['13'],
-                      'Strasse': ['New Street'],
-                      'PLZ': ['12345'],
-                      'Wohnort': ['Testtown'],
-                      'Lehrer': ['Stevenson'],
-                      'Benutzercode': ['*54322*'],
-                      'Bemerkungen': ['']
-                      }
-                    ]
-        importer.import_users(testdata)
+    def import_media_row(self, row):
+        if not 'ISBN' in row or len(row['ISBN']) <= 0:
+            raise XMLDataImportError('No ISBN number given')
         
-    def test_import_media(self):
-        importer = XMLDataImporter(self.__testbase)
-        testdata = [ {'Titel': ['Sellbester'],
-                      'Urheber': ['Money Maggins'],
-                      'Verlag': ['Monkeyprint'],
-                      'ISBN': ['1-1111-1111-11'],
-                      'Datum der Aufnahme': ['1.1.2013'],
-                      'Signatur': ['MAGG'],
-                      'Schlagwort': ['Money Fame'],
-                      'Sprache': ['Eng.'],
-                      'Strichcode Medien': ['*1234*']
-                     },
-                     {'Titel': ['The Hobby'],
-                      'Urheber': ['Jake Shmolkins'],
-                      'Verlag': ['Deep Pedigree'],
-                      'ISBN': ['2-1111-1111-11'],
-                      'Datum der Aufnahme': ['1.1.2013'],
-                      'Signatur': ['SMOL'],
-                      'Schlagwort': ['Hobby Selfmade'],
-                      'Sprache': ['Eng.'],
-                      'Strichcode Medien': ['*2234*']
-                      }
-                    ]
-        importer.import_media(testdata)
+        isbnstring = ' '.join(row['ISBN'])
+        try:
+            isbn = self.demangle_isbn(isbnstring)
+        except ISBNDemanglingError as error:
+            raise XMLDataImportError('Failed to interpret ISBN number correctly: %s' % error)
+        
+        
+        """
+        self.__database.add_media(title=' '.join(row['Titel']),
+                                  author=' '.join(row['Urheber']),
+                                  isbn=' '.join(row['ISBN']),
+                                  barcode=' '.join(row['Strichcode Medien']))
+                                  """
+    
+    def demangle_isbn(self, isbnstring):
+        # Fix (some) obvious typos
+        fixed = isbnstring.replace('x', 'X')
+        fixed = fixed.replace('o', '0')
+        fixed = fixed.replace('O', '0')
+        fixed = fixed.replace(',', '-')
+        fixed = fixed.replace('.', '-')
+        
+        # Check if the number is valid as is
+        try:
+            return isbn.Isbn(fixed)
+        except isbn.IsbnError:
+            pass
+        
+        # Maybe it is an ISBN13 that is missing the 978 prefix
+        try:
+            return isbn.Isbn('978' + fixed)
+        except isbn.IsbnError:
+            pass
+        
+        raise ISBNDemanglingError('%s is not a valid ISBN number' % isbnstring)

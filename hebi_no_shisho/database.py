@@ -19,6 +19,7 @@
 from sqlobject import * #@UnusedWildImport
 import os
 
+
 from passlib.hash import sha256_crypt
 
 class PermissionViolation(Exception):
@@ -97,11 +98,14 @@ class Configuration(SQLObject):
     key = StringCol(notNone=True, unique=True)
     value = StringCol()
 
+class Inventory(SQLObject):
+    barcode = StringCol(unique=True, notNone=True)
+    info = ForeignKey('Media', cascade=True, notNone=True)
+
 class Media(SQLObject):
     title = StringCol(notNone=True)
-    author = StringCol()
-    isbn = StringCol(notNone=True)
-    barcode = StringCol(unique=True, notNone=True)
+    author = StringCol(notNone=False)
+    isbn = StringCol(notNone=True, unique=True)
 
 class User(SQLObject):
     first_name = StringCol(notNone=True)
@@ -114,23 +118,3 @@ class Loan(SQLObject):
     book = ForeignKey('Media', cascade=True, unique=True, notNone=True)
     borrower = ForeignKey('User', cascade=False, notNone=True)
     loanDate = DateCol(notNone=True)
-
-
-#------------------------------------------------------------------------------
-# Testing
-#------------------------------------------------------------------------------
-import unittest
-
-class TestDatabase(unittest.TestCase):
-
-    def setUp(self):
-        self.database = Database(':memory:')
-        
-    def test_database_setup(self):
-        my_password = 'this_is_sparta'
-        not_my_password = 'such_is_life'
-        self.assertFalse(self.database.is_valid())
-        self.database.reset_database(my_password)
-        self.assertTrue(self.database.check_password(my_password))
-        self.assertFalse(self.database.check_password(not_my_password))
-        self.assertTrue(self.database.is_valid())
