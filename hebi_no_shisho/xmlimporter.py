@@ -17,6 +17,7 @@
 """
 
 import isbn
+import database
 
 class XMLDataImportError(Exception):
     pass
@@ -29,23 +30,50 @@ class FileMakerXMLDataImporter:
         self.__database = database
 
     def import_user_table(self, xmldata):
-        for user in xmldata:
+        error_count = 0
+        progress_count = 0
+        
+        self.__database.begin_transaction()
+        for row in xmldata:
             try:
-                self.__database.add_user(first_name=' '.join(user['Vorname']),
-                                         last_name=' '.join(user['Name']),
-                                         form=' '.join(user['Klasse']),
-                                         barcode=' '.join(user['Benutzercode']))
+                self.import_user_row(row)
+            except XMLDataImportError as error:
+                print "Unable to import %s: %s" % (row, error)
+                error_count += 1
             except:
+                self.__database.rollback_transaction()
                 raise
-
+            progress_count += 1
+        self.__database.commit_transaction()
+            
+        print "Failed to import %d of %d rows" % (error_count, len(xmldata))
+        
+    def import_user_row(self, row):
+        try:
+            self.__database.add_user(first_name=' '.join(row['Vorname']),
+                                     last_name=' '.join(row['Name']),
+                                     form=' '.join(row['Klasse']),
+                                     barcode=' '.join(row['Benutzercode']))
+        except database.DatabaseIntegrityError as error:
+            raise XMLDataImportError('Unable to add book to database: %s' % error)
+    
     def import_media_table(self, xmldata):
         error_count = 0
+        progress_count = 0
+        
+        self.__database.begin_transaction()
         for row in xmldata:
             try:
                 self.import_media_row(row)
             except XMLDataImportError as error:
                 print "Unable to import %s: %s" % (row, error)
                 error_count += 1
+            except:
+                self.__database.rollback_transaction()
+                raise
+            progress_count += 1
+        self.__database.commit_transaction()
+            
         print "Failed to import %d of %d rows" % (error_count, len(xmldata))
 
     def import_loan_table(self, xmldata):
@@ -62,13 +90,14 @@ class FileMakerXMLDataImporter:
         except ISBNDemanglingError as error:
             raise XMLDataImportError('Failed to interpret ISBN number correctly: %s' % error)
         
-        
-        """
-        self.__database.add_media(title=' '.join(row['Titel']),
-                                  author=' '.join(row['Urheber']),
-                                  isbn=' '.join(row['ISBN']),
-                                  barcode=' '.join(row['Strichcode Medien']))
-                                  """
+        self.__database.add_book_information(title=' '.join(row['Titel']),
+                                             author=' '.join(row['Urheber']),
+                                             isbn=' '.join(row['ISBN']))
+        try:
+            self.__database.add_book_exemplary(isbn=' '.join(row['ISBN']),
+                                               barcode=' '.join(row['Strichcode Medien']))
+        except database.DatabaseIntegrityError as error:
+            raise XMLDataImportError('Unable to add book to database: %s' % error)
     
     def demangle_isbn(self, isbnstring):
         # Fix (some) obvious typos
@@ -77,6 +106,7 @@ class FileMakerXMLDataImporter:
         fixed = fixed.replace('O', '0')
         fixed = fixed.replace(',', '-')
         fixed = fixed.replace('.', '-')
+        fixed = fixed.replace(' ', '')
         
         # Check if the number is valid as is
         try:

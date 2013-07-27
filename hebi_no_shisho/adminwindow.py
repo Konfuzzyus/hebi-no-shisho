@@ -57,6 +57,28 @@ class UserBrowser(QtGui.QWidget):
     def __init__(self, database):
         super(UserBrowser, self).__init__()
         self.__database = database
+        
+        self.importButton = QtGui.QPushButton('Import')
+        self.importButton.clicked.connect(self.importUsers)
+        
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.importButton)
+        self.setLayout(layout)
+    
+    def importUsers(self):
+        filename = QtGui.QFileDialog.getOpenFileName(parent=self,
+                                                     caption='Select file to Import',
+                                                     filter='FileMaker export (*.xml)')
+        if filename:
+            try:
+                loader = xmlloader.FileMakerXMLData(str(filename))
+                importer = xmlimporter.FileMakerXMLDataImporter(self.__database)
+                importer.import_user_table(loader.get_data())
+            except xmlloader.LoadException as e:
+                QtGui.QMessageBox.information(self,
+                                              'Loading Error',
+                                              e,
+                                              QtGui.QMessageBox.Ok)
 
 import xmlloader
 import xmlimporter

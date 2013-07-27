@@ -37,9 +37,11 @@ class Database():
         else:
             connection_string = 'sqlite:' + os.path.abspath(filename)
         sqlhub.processConnection = connectionForURI(connection_string)
+        self.__transaction = None
     
     def erase_database(self):
         Media.dropTable(ifExists=True)
+        Inventory.dropTable(ifExists=True)
         User.dropTable(ifExists=True)
         Loan.dropTable(ifExists=True)
         Configuration.dropTable(ifExists=True)
@@ -71,6 +73,8 @@ class Database():
         ''' Check whether the database is ready for use '''
         if not Media.tableExists():
             return False
+        if not Inventory.tableExists():
+            return False
         if not User.tableExists():
             return False
         if not Loan.tableExists():
@@ -87,30 +91,71 @@ class Database():
         Media.createTable(ifNotExists=True)
         User.createTable(ifNotExists=True)
         Loan.createTable(ifNotExists=True)
+        Inventory.createTable(ifNotExists=True)
     
-    def add_user(self, **kwargs):
-        User(**kwargs)
+    def add_user(self, first_name, last_name, **kwargs):
+        result = User.select(AND(User.q.first_name == first_name,User.q.last_name == last_name), connection=self.__transaction).getOne(None)
+        try:
+            if result is None:
+                User(first_name=first_name, last_name=last_name, connection=self.__transaction, **kwargs)
+            else:
+                result.set(**kwargs)
+        except dberrors.DuplicateEntryError:
+            raise DatabaseIntegrityError('Given barcode already exists in database')
 
-    def add_media(self, **kwargs):
-        Media(**kwargs)
+    def add_book_information(self, isbn, **kwargs):
+        result = Media.select(Media.q.isbn == isbn, connection=self.__transaction).getOne(None)
+        if result is None:
+            Media(isbn=isbn, connection=self.__transaction, **kwargs)
+        else:
+            result.set(**kwargs)
+
+    def add_book_exemplary(self, barcode, isbn):
+        result = Media.select(Media.q.isbn == isbn, connection=self.__transaction).getOne(None)
+        if result is None:
+            raise DatabaseIntegrityError('Requested ISBN information missing from database')
+        try:
+            insert = sqlbuilder.Insert('Inventory', values={'barcode': barcode, 'info_id': result.id})
+            if self.__transaction is None:
+                connection = sqlhub.getConnection()
+            else:
+                connection = self.__transaction
+            query = connection.sqlrepr(insert)
+            connection.query(query)
+        except dberrors.DuplicateEntryError:
+            raise DatabaseIntegrityError('Given barcode already exists in database')
+    
+    def begin_transaction(self):
+        if not self.__transaction is None:
+            raise PermissionViolation('Started a new transaction when there already was one in progress')
+        self.__transaction = sqlhub.getConnection().transaction()
+    
+    def commit_transaction(self):
+        self.__transaction.commit(close=True)
+        self.__transaction = None
+    
+    def rollback_transaction(self):
+        self.__transaction.rollback()
+        self.__transaction = None
 
 class Configuration(SQLObject):
     key = StringCol(notNone=True, unique=True)
-    value = StringCol()
+    value = UnicodeCol()
 
 class Inventory(SQLObject):
     barcode = StringCol(unique=True, notNone=True)
     info = ForeignKey('Media', cascade=True, notNone=True)
 
 class Media(SQLObject):
-    title = StringCol(notNone=True)
-    author = StringCol(notNone=False)
+    title = UnicodeCol(notNone=True)
+    author = UnicodeCol(notNone=False)
     isbn = StringCol(notNone=True, unique=True)
 
 class User(SQLObject):
-    first_name = StringCol(notNone=True)
-    last_name = StringCol(notNone=True)
-    form = StringCol(notNone=True)
+    first_name = UnicodeCol(notNone=True)
+    last_name = UnicodeCol(notNone=True)
+    full_name_index = DatabaseIndex('first_name', 'last_name')
+    form = UnicodeCol(notNone=True)
     loans = MultipleJoin('Loan')
     barcode = StringCol(notNone=True, unique=True)
 

@@ -5,4 +5,4 @@ from distutils.core import setup
 setup(name = 'hebi-no-shisho',
       version = '0.0.0a',
       packages = ['hebi-no-shisho'],
-      requires = ['sqlobject', 'pyqt', 'passlib', 'pyisbn'])
+      requires = ['sqlobject', 'pyqt', 'passlib'])
