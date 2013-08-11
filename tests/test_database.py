@@ -18,7 +18,7 @@
 
 import unittest
 
-from hebi_no_shisho import database
+from hebi_no_shisho.data import database
 
 class TestDatabase(unittest.TestCase):
 

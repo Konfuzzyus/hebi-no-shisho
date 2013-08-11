@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import shishoapp
+from gui import shishoapp
 import sys
 
 if __name__ == '__main__':

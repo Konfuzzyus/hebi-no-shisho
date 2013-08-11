@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import isbn
-import database
+from hebi_no_shisho.library import isbn
+from hebi_no_shisho.data import database
 
 class XMLDataImportError(Exception):
     pass

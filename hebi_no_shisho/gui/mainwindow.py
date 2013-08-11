@@ -17,7 +17,7 @@
 """
 
 from PyQt4 import QtGui
-import adminwindow
+from hebi_no_shisho.gui import adminwindow
 
 class MainWindow(QtGui.QMainWindow):
 

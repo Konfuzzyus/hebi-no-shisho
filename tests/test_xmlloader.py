@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from hebi_no_shisho import xmlloader
+from hebi_no_shisho.filemaker import xmlloader
 import unittest
 import tempfile
 import os

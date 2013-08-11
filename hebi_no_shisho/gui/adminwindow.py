@@ -80,8 +80,8 @@ class UserBrowser(QtGui.QWidget):
                                               e,
                                               QtGui.QMessageBox.Ok)
 
-import xmlloader
-import xmlimporter
+from hebi_no_shisho.filemaker import xmlloader
+from hebi_no_shisho.filemaker import xmlimporter
 
 class MediaBrowser(QtGui.QWidget):
     def __init__(self, database):

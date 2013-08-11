@@ -17,7 +17,7 @@
 """
 
 import unittest
-from hebi_no_shisho import isbn
+from hebi_no_shisho.library import isbn
 
 class TestIsbn(unittest.TestCase):
 

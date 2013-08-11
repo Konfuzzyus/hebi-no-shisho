@@ -16,7 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from hebi_no_shisho import database, xmlimporter
+from hebi_no_shisho.filemaker import xmlimporter
+from hebi_no_shisho.data import database
 import unittest
 import os
 import tempfile

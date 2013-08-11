@@ -17,8 +17,8 @@
 """
 
 from PyQt4 import QtGui
-import mainwindow
-import database
+from hebi_no_shisho.gui import mainwindow
+from hebi_no_shisho.data import database
 import os
 
 class ShishoApplication(QtGui.QApplication):
