@@ -74,7 +74,7 @@ class UserBrowser(QtGui.QWidget):
             try:
                 loader = xmlloader.FileMakerXMLData(str(filename))
                 userimporter = importer.UserDataImporter(self.__database)
-                converted = conversion.extract_media(loader.get_data())
+                converted = conversion.extract_users(loader.get_data())
                 userimporter.import_data(converted)
             except xmlloader.LoadException as e:
                 QtGui.QMessageBox.information(self,

@@ -119,8 +119,13 @@ class UserDataImporter:
         print "Failed to import %d of %d rows" % (error_count, len(data))
     
     def _import_row(self, row):
+        if not 'first_name' in row or row['first_name'] is None:
+            raise DataImportError('No first name given')
+        if not 'last_name' in row or row['last_name'] is None:
+            raise DataImportError('No last name given') 
+        
         try:
             self.__database.add_user(**row)
         except database.DatabaseIntegrityError as error:
-            raise DataImportError('Unable to add book to database: %s' % error)
+            raise DataImportError('Unable to add user to database: %s' % error)
     

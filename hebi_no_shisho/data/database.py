@@ -163,9 +163,9 @@ class Media(SQLObject):
 class User(SQLObject):
     first_name = UnicodeCol(notNone=True)
     last_name = UnicodeCol(notNone=True)
-    birthday = DateCol(notNone=True)
+    birthday = DateCol(notNone=False)
     full_name_index = DatabaseIndex('first_name', 'last_name', 'birthday')
-    form = UnicodeCol(notNone=True)
+    form = UnicodeCol(notNone=False)
     loans = MultipleJoin('Loan')
     barcode = StringCol(notNone=True, unique=True)
     status = StringCol(notNone=True)
