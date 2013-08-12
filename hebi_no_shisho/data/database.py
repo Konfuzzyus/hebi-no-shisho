@@ -147,17 +147,28 @@ class Inventory(SQLObject):
     info = ForeignKey('Media', cascade=True, notNone=True)
 
 class Media(SQLObject):
+    isbn = StringCol(notNone=True, unique=True)
     title = UnicodeCol(notNone=True)
     author = UnicodeCol(notNone=False)
-    isbn = StringCol(notNone=True, unique=True)
+    language = StringCol(notNone=False)
+    summary = UnicodeCol(notNone=False)
+    subjects = UnicodeCol(notNone=False)
+    dewey = StringCol(notNone=False)
+    signature = UnicodeCol(notNone=False)
+    publisher_name = UnicodeCol(notNone=False)
+    notes = UnicodeCol(notNone=False)
+    edition = UnicodeCol(notNone=False)
+    physical_description = UnicodeCol(notNone=False)
 
 class User(SQLObject):
     first_name = UnicodeCol(notNone=True)
     last_name = UnicodeCol(notNone=True)
-    full_name_index = DatabaseIndex('first_name', 'last_name')
+    birthday = DateCol(notNone=True)
+    full_name_index = DatabaseIndex('first_name', 'last_name', 'birthday')
     form = UnicodeCol(notNone=True)
     loans = MultipleJoin('Loan')
     barcode = StringCol(notNone=True, unique=True)
+    status = StringCol(notNone=True)
 
 class Loan(SQLObject):
     book = ForeignKey('Media', cascade=True, unique=True, notNone=True)

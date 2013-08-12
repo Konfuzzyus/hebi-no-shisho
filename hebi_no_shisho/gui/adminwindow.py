@@ -17,6 +17,7 @@
 """
 
 from PyQt4 import QtGui
+from hebi_no_shisho.filemaker import importer, conversion, xmlloader
 
 class AdminWindow(QtGui.QDialog):
 
@@ -72,16 +73,15 @@ class UserBrowser(QtGui.QWidget):
         if filename:
             try:
                 loader = xmlloader.FileMakerXMLData(str(filename))
-                importer = xmlimporter.FileMakerXMLDataImporter(self.__database)
-                importer.import_user_table(loader.get_data())
+                userimporter = importer.UserDataImporter(self.__database)
+                converted = conversion.extract_media(loader.get_data())
+                userimporter.import_data(converted)
             except xmlloader.LoadException as e:
                 QtGui.QMessageBox.information(self,
                                               'Loading Error',
                                               e,
                                               QtGui.QMessageBox.Ok)
 
-from hebi_no_shisho.filemaker import xmlloader
-from hebi_no_shisho.filemaker import xmlimporter
 
 class MediaBrowser(QtGui.QWidget):
     def __init__(self, database):
@@ -102,8 +102,9 @@ class MediaBrowser(QtGui.QWidget):
         if filename:
             try:
                 loader = xmlloader.FileMakerXMLData(str(filename))
-                importer = xmlimporter.FileMakerXMLDataImporter(self.__database)
-                importer.import_media_table(loader.get_data())
+                mediaimporter = importer.MediaDataImporter(self.__database)
+                converted = conversion.extract_media(loader.get_data())
+                mediaimporter.import_data(converted)
             except xmlloader.LoadException as e:
                 QtGui.QMessageBox.information(self,
                                               'Loading Error',

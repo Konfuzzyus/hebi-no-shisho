@@ -16,20 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import unittest
-
-from hebi_no_shisho.data import database
-
-class TestDatabase(unittest.TestCase):
-
-    def setUp(self):
-        self.database = database.Database(':memory:')
-        
-    def test_database_setup(self):
-        my_password = 'this_is_my_password'
-        not_my_password = 'this_is_not_my_password'
-        self.assertFalse(self.database.is_valid())
-        self.database.reset_database(my_password)
-        self.assertTrue(self.database.check_password(my_password))
-        self.assertFalse(self.database.check_password(not_my_password))
-        self.assertTrue(self.database.is_valid())
+USER_DELETED = "Deleted"
+USER_TEACHER = "Teacher"
+USER_STUDENT = "Student"
