@@ -1,3 +1,4 @@
+# -*- coding: latin-1 -*-
 """
     Hebi no Shisho - A small scale pythonic library management tool
     Copyright (C) 2013 Christian Meyer
@@ -18,6 +19,7 @@
 
 from hebi_no_shisho.library import constants
 import re
+from datetime import datetime
 
 def _pull_item(row, key):
     item = ' '.join(row[key]).strip()
@@ -39,12 +41,21 @@ def _unmangle_signature(signature):
         return signature, None
     return None, signature
 
+def _convert_date(raw_date):
+    if raw_date is None:
+        return raw_date
+    parsed_date = datetime.strptime(raw_date, '%d.%m.%Y')
+    return parsed_date.strftime('%Y-%m-%d')
+
 def extract_media(data):
     converted = []
     
     for row in data:
         entry = {}
-        entry['barcode'] = _pull_item(row, 'Strichcode Medien')
+        barcode = _pull_item(row, 'Strichcode Medien')
+        if not barcode is None:
+            barcode = barcode.replace('*', '')
+        entry['barcode'] = barcode
         entry['isbn'] =  _pull_item(row, 'ISBN')
         entry['title'] =  _pull_item(row, 'Titel')
         entry['author'] = _pull_item(row, 'Urheber')
@@ -70,9 +81,26 @@ def extract_users(data):
         entry['first_name'] = _pull_item(row, 'Vorname')
         entry['last_name'] = _pull_item(row, 'Name')
         entry['form'] = _pull_item(row, 'Klasse')
-        entry['barcode'] = _pull_item(row, 'Benutzercode')
+        barcode = _pull_item(row, 'Benutzercode')
+        if not barcode is None:
+            barcode = barcode.replace('*', '')
+        entry['barcode'] = barcode
         entry['birthday'] = None
         entry['status'] = _convert_to_user_status(_pull_item(row, 'Benutzerkategorie'), _pull_item(row, 'Benutzer_gesperrt'))
+        converted.append(entry)
+    
+    return converted
+    
+
+def extract_loans(data):
+    converted = []
+    
+    for row in data:
+        entry = {}
+        entry['loanDate'] = _convert_date(_pull_item(row, 'Ausleihdatum'))
+        entry['returnDate'] = _convert_date(_pull_item(row, 'Rückgabedatum'))
+        entry['book_code'] = _pull_item(row, 'NR Zugang')
+        entry['borrower_code'] = _pull_item(row, 'Ausleihperson')
         converted.append(entry)
     
     return converted

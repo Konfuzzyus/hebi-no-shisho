@@ -49,51 +49,55 @@ class AdminWindow(QtGui.QDialog):
     def createMenus(self):
         pass
 
+
 class LibraryReporter(QtGui.QWidget):
     def __init__(self, database):
         super(LibraryReporter, self).__init__()
         self.__database = database
 
+
 class UserBrowser(QtGui.QWidget):
     def __init__(self, database):
         super(UserBrowser, self).__init__()
         self.__database = database
-        
-        self.importButton = QtGui.QPushButton('Import')
-        self.importButton.clicked.connect(self.importUsers)
-        
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.importButton)
-        self.setLayout(layout)
-    
-    def importUsers(self):
-        filename = QtGui.QFileDialog.getOpenFileName(parent=self,
-                                                     caption='Select file to Import',
-                                                     filter='FileMaker export (*.xml)')
-        if filename:
-            try:
-                loader = xmlloader.FileMakerXMLData(str(filename))
-                userimporter = importer.UserDataImporter(self.__database)
-                converted = conversion.extract_users(loader.get_data())
-                userimporter.import_data(converted)
-            except xmlloader.LoadException as e:
-                QtGui.QMessageBox.information(self,
-                                              'Loading Error',
-                                              e,
-                                              QtGui.QMessageBox.Ok)
 
 
 class MediaBrowser(QtGui.QWidget):
     def __init__(self, database):
         super(MediaBrowser, self).__init__()
         self.__database = database
+
+
+class DatabaseAdmin(QtGui.QWidget):
+    def __init__(self, database):
+        super(DatabaseAdmin, self).__init__()
+        self.__database = database
         
-        self.importButton = QtGui.QPushButton('Import')
-        self.importButton.clicked.connect(self.importMedia)
+        self.eraseButton = QtGui.QPushButton('Erase Database')
+        self.eraseButton.clicked.connect(self.eraseDatabase)
+        self.importMediaButton = QtGui.QPushButton('Import Media')
+        self.importMediaButton.clicked.connect(self.importMedia)
+        self.importUserButton = QtGui.QPushButton('Import Users')
+        self.importUserButton.clicked.connect(self.importUsers)
+        self.importLoanButton = QtGui.QPushButton('Import Loans')
+        self.importLoanButton.clicked.connect(self.importLoans)
         
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.importButton)
+        layout.addWidget(self.importMediaButton)
+        layout.addWidget(self.importUserButton)
+        layout.addWidget(self.importLoanButton)
+        layout.addWidget(self.eraseButton)
         self.setLayout(layout)
+    
+    def eraseDatabase(self):
+        answer = QtGui.QMessageBox.question(self,
+                                            "Erase Database",
+                                            "Clicking Yes will erase the current database.\n"
+                                            "This can not be undone, are you sure you want to continue?",
+                                            buttons = QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        if answer == QtGui.QMessageBox.Yes:
+            self.__database.erase_database()
+            self.topLevelWidget().close()
     
     def importMedia(self):
         filename = QtGui.QFileDialog.getOpenFileName(parent=self,
@@ -110,25 +114,35 @@ class MediaBrowser(QtGui.QWidget):
                                               'Loading Error',
                                               e,
                                               QtGui.QMessageBox.Ok)
-        
-class DatabaseAdmin(QtGui.QWidget):
-    def __init__(self, database):
-        super(DatabaseAdmin, self).__init__()
-        self.__database = database
-        
-        self.importButton = QtGui.QPushButton('Erase Database')
-        self.importButton.clicked.connect(self.eraseDatabase)
-        
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.importButton)
-        self.setLayout(layout)
     
-    def eraseDatabase(self):
-        answer = QtGui.QMessageBox.question(self,
-                                            "Erase Database",
-                                            "Clicking Yes will erase the current database.\n"
-                                            "This can not be undone, are you sure you want to continue?",
-                                            buttons = QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-        if answer == QtGui.QMessageBox.Yes:
-            self.__database.erase_database()
-            self.topLevelWidget().close()
+    def importUsers(self):
+        filename = QtGui.QFileDialog.getOpenFileName(parent=self,
+                                                     caption='Select file to Import',
+                                                     filter='FileMaker export (*.xml)')
+        if filename:
+            try:
+                loader = xmlloader.FileMakerXMLData(str(filename))
+                userimporter = importer.UserDataImporter(self.__database)
+                converted = conversion.extract_users(loader.get_data())
+                userimporter.import_data(converted)
+            except xmlloader.LoadException as e:
+                QtGui.QMessageBox.information(self,
+                                              'Loading Error',
+                                              e,
+                                              QtGui.QMessageBox.Ok)
+                
+    def importLoans(self):
+        filename = QtGui.QFileDialog.getOpenFileName(parent=self,
+                                                     caption='Select file to Import',
+                                                     filter='FileMaker export (*.xml)')
+        if filename:
+            try:
+                loader = xmlloader.FileMakerXMLData(str(filename))
+                loanimporter = importer.LoanDataImporter(self.__database)
+                converted = conversion.extract_loans(loader.get_data())
+                loanimporter.import_data(converted)
+            except xmlloader.LoadException as e:
+                QtGui.QMessageBox.information(self,
+                                              'Loading Error',
+                                              e,
+                                              QtGui.QMessageBox.Ok)

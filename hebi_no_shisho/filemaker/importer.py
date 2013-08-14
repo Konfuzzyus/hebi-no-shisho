@@ -129,3 +129,38 @@ class UserDataImporter:
         except database.DatabaseIntegrityError as error:
             raise DataImportError('Unable to add user to database: %s' % error)
     
+    
+class LoanDataImporter:
+    def __init__(self, database):
+        self.__database = database
+    
+    def import_data(self, data):
+        error_count = 0
+        progress_count = 0
+        
+        self.__database.begin_transaction()
+        for row in data:
+            try:
+                self._import_row(row)
+            except DataImportError as error:
+                print "Unable to import %s: %s" % (row, error)
+                error_count += 1
+            except:
+                self.__database.rollback_transaction()
+                raise
+            progress_count += 1
+        self.__database.commit_transaction()
+            
+        print "Failed to import %d of %d rows" % (error_count, len(data))
+    
+    def _import_row(self, row):
+        if not 'book_code' in row or row['book_code'] is None:
+            raise DataImportError('No book id given')
+        if not 'borrower_code' in row or row['borrower_code'] is None:
+            raise DataImportError('No borrower id given') 
+        
+        try:
+            self.__database.add_loan(**row)
+        except database.DatabaseIntegrityError as error:
+            raise DataImportError('Unable to add loan to database: %s' % error)
+    

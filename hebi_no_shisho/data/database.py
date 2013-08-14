@@ -103,6 +103,15 @@ class Database():
         except dberrors.DuplicateEntryError:
             raise DatabaseIntegrityError('Given barcode already exists in database')
 
+    def add_loan(self, book_code, borrower_code, **kwargs):
+        borrower = User.select(User.q.barcode == borrower_code, connection=self.__transaction).getOne(None)
+        if borrower is None:
+            raise DatabaseIntegrityError('Given borrower not present in database')
+        book = Inventory.select(Inventory.q.barcode == book_code, connection=self.__transaction).getOne(None)
+        if book is None:
+            raise DatabaseIntegrityError('Given book not present in database')
+        Loan(bookID=book.id, borrowerID=borrower.id, **kwargs)
+
     def add_book_information(self, isbn, **kwargs):
         result = Media.select(Media.q.isbn == isbn, connection=self.__transaction).getOne(None)
         if result is None:
@@ -171,6 +180,7 @@ class User(SQLObject):
     status = StringCol(notNone=True)
 
 class Loan(SQLObject):
-    book = ForeignKey('Media', cascade=True, unique=True, notNone=True)
+    book = ForeignKey('Media', cascade=True, notNone=True)
     borrower = ForeignKey('User', cascade=False, notNone=True)
-    loanDate = DateCol(notNone=True)
+    loanDate = DateCol(notNone=False)
+    returnDate = DateCol(notNone=False)
