@@ -18,7 +18,8 @@
 
 from sqlobject import * #@UnusedWildImport
 import os
-
+from hebi_no_shisho.data import userlist
+from hebi_no_shisho.library import constants
 
 from passlib.hash import sha256_crypt
 
@@ -133,6 +134,19 @@ class Database():
             connection.query(query)
         except dberrors.DuplicateEntryError:
             raise DatabaseIntegrityError('Given barcode already exists in database')
+    
+    def get_userlist(self):
+        mylist = userlist.UserList()
+        query = User.select(User.q.status != constants.USER_DELETED, orderBy=User.q.form)
+        print query.count()
+        for result in query:
+            username = u'%s %s' % (result.first_name, result.last_name)
+            mylist.add_user(form=result.form,
+                            usertype=result.status,
+                            name=username,
+                            birthday=result.birthday,
+                            barcode=result.barcode)
+        return mylist
     
     def begin_transaction(self):
         if not self.__transaction is None:

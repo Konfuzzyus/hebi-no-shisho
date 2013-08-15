@@ -18,6 +18,7 @@
 
 from PyQt4 import QtGui
 from hebi_no_shisho.filemaker import importer, conversion, xmlloader
+from hebi_no_shisho.printing import roster
 
 class AdminWindow(QtGui.QDialog):
 
@@ -60,6 +61,23 @@ class UserBrowser(QtGui.QWidget):
     def __init__(self, database):
         super(UserBrowser, self).__init__()
         self.__database = database
+        
+        self.userCatalogueButton = QtGui.QPushButton('Create User Catalogue')
+        self.userCatalogueButton.clicked.connect(self.createUserCatalogue)
+        
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.userCatalogueButton)
+        self.setLayout(layout)
+    
+    def createUserCatalogue(self):
+        filename = QtGui.QFileDialog.getSaveFileName(parent=self,
+                                                     directory='UserCatalogue.pdf',
+                                                     caption='Choose where to store catalogue',
+                                                     filter='User catalogue (*.pdf)')
+        if filename:
+            userlist = self.__database.get_userlist()
+            roster = roster.UserRoster(userlist)
+            roster.write_pdf(filename)
 
 
 class MediaBrowser(QtGui.QWidget):

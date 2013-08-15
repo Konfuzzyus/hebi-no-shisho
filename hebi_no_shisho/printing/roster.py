@@ -16,3 +16,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from reportlab.lib import units
+from reportlab.lib import pagesizes
+
+left_margin = units.cm * 2.5
+other_margins = units.cm * 1.5
+page_size = pagesizes.A4
+
+class UserRoster():
+    
+    def __init__(self, userlist):
+        self.userlist = userlist
+        
+    def write_pdf(self, filename):
+        pass

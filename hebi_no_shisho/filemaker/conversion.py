@@ -28,9 +28,9 @@ def _pull_item(row, key):
     return item
 
 def _convert_to_user_status(status, locked):
-    if locked != '':
+    if not locked is None:
         return constants.USER_DELETED
-    if status.find('Lehrer') != -1:
+    if not status is None and status.find('Lehrer') != -1:
         return constants.USER_TEACHER
     return constants.USER_STUDENT
 
