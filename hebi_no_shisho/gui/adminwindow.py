@@ -76,8 +76,8 @@ class UserBrowser(QtGui.QWidget):
                                                      filter='User catalogue (*.pdf)')
         if filename:
             userlist = self.__database.get_userlist()
-            roster = roster.UserRoster(userlist)
-            roster.write_pdf(filename)
+            myroster = roster.UserRoster(userlist)
+            myroster.write_pdf(filename)
 
 
 class MediaBrowser(QtGui.QWidget):

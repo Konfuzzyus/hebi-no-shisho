@@ -23,6 +23,17 @@ class User():
         self.name = name
         self.birthday = birthday
         self.barcode = barcode
+    
+    def get_name(self):
+        return self.name
+    
+    def get_birthday(self):
+        if self.birthday is None:
+            return '---'
+        return self.birthday
+    
+    def get_barcode(self):
+        return self.barcode
 
 class Form():
     def __repr__(self):
@@ -40,6 +51,8 @@ class Form():
         return self.pupils
     
     def get_name(self):
+        if self.name is None:
+            return u'Administration'
         return self.name
     
     def add_teacher(self, user):
@@ -59,7 +72,7 @@ class UserList():
         self.forms = {}
     
     def get_forms(self):
-        return self.forms
+        return self.forms.values()
     
     def add_user(self, form, usertype, name, birthday, barcode):
         if not form in self.forms:

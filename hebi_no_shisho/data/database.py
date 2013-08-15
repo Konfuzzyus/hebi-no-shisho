@@ -138,7 +138,6 @@ class Database():
     def get_userlist(self):
         mylist = userlist.UserList()
         query = User.select(User.q.status != constants.USER_DELETED, orderBy=User.q.form)
-        print query.count()
         for result in query:
             username = u'%s %s' % (result.first_name, result.last_name)
             mylist.add_user(form=result.form,
