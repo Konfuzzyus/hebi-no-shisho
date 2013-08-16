@@ -22,9 +22,46 @@ from datetime import date
 class OperationException(Exception):
     pass
 
+STATE_IDLE = 0
+STATE_BORROW = 1
+
+CODE_UNKNOWN = 0
+CODE_USER = 1
+CODE_BOOK = 2
+
 class Librarian():
+    
     def __init__(self, database):
         self.__database = database
+        self.__state = STATE_IDLE
+        self.__borrower_code = None
+    
+    def handleCode(self, code):
+        if self.__state == STATE_BORROW:
+            self.processBorrow(code)
+        else:
+            self.processIdle(code)
+    
+    def processIdle(self, code):
+        codetype = self.getCodeType(code)
+        if codetype != CODE_USER:
+            raise OperationException('Given code is not a user')
+        self.__borrower_code = code
+        
+    def processBorrow(self, code):
+        codetype = self.getCodeType(code)
+        if codetype == CODE_USER:
+            self.__borrower_code = code
+        else:
+            self.borrow(code, self.__borrower_code)
+    
+    def getCodeType(self, code):
+        if self.__database.is_book_code(code):
+            return CODE_BOOK
+        elif self.__database.is_user_code(code):
+            return CODE_USER
+        else:
+            return CODE_UNKNOWN
     
     def borrow(self, book_code, borrower_code):
         try:

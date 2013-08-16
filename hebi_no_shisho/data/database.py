@@ -102,7 +102,7 @@ class Database():
             if result is None:
                 User(first_name=first_name, last_name=last_name, connection=self._get_transaction(), **kwargs)
             else:
-                result.set(connection=self._get_transaction(), **kwargs)
+                result.set(**kwargs)
         except dberrors.DuplicateEntryError:
             raise DatabaseIntegrityError('Given barcode already exists in database')
 
@@ -110,6 +110,8 @@ class Database():
         borrower = User.select(User.q.barcode == borrower_code, connection=self._get_transaction()).getOne(None)
         if borrower is None:
             raise DatabaseIntegrityError('Given borrower not present in database')
+        if borrower.status == constants.USER_DELETED:
+            raise DatabaseIntegrityError('Given borrower has been been locked')
         book = Inventory.select(Inventory.q.barcode == book_code, connection=self._get_transaction()).getOne(None)
         if book is None:
             raise DatabaseIntegrityError('Given book not present in database')
@@ -137,6 +139,18 @@ class Database():
             raise DatabaseIntegrityError('Given barcode is not present in database')
         loans = Loan.select(AND(Loan.q.book == book.id, Loan.q.returnDate == None))
         if loans.count() > 0:
+            return True
+        return False
+    
+    def is_book_code(self, book_code):
+        result = Inventory.select(Inventory.q.barcode == book_code, connection=self._get_transaction())
+        if result.count() > 0:
+            return True
+        return False
+    
+    def is_user_code(self, user_code):
+        result = User.select(User.q.barcode == user_code, connection=self._get_transaction())
+        if result.count() > 0:
             return True
         return False
     

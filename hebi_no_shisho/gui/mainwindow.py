@@ -18,6 +18,7 @@
 
 from PyQt4 import QtGui
 from hebi_no_shisho.gui import adminwindow
+from hebi_no_shisho.library import librarian
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -25,6 +26,7 @@ class MainWindow(QtGui.QMainWindow):
         super(MainWindow, self).__init__()
         self.__database = database
 
+        self.createMainLayout()
         self.createActions()
         self.createMenus()
         self.createAdminWindow()
@@ -32,6 +34,10 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowTitle("Hebi-no-Shisho")
         self.setMinimumSize(160, 160)
         self.resize(480, 320)
+    
+    def createMainLayout(self):
+        operator = LibraryOperator(self.__database)
+        self.setCentralWidget(operator)
 
     def createActions(self):
         self.actAdmin = QtGui.QAction("Administration",
@@ -123,3 +129,27 @@ class MainWindow(QtGui.QMainWindow):
 
     def showAboutQt(self):
         QtGui.QMessageBox.aboutQt(self)
+
+class LibraryOperator(QtGui.QWidget):
+    def __init__(self, database):
+        super(LibraryOperator, self).__init__()
+        self.__librarian = librarian.Librarian(database)
+        
+        self.barcodeEntry = QtGui.QLineEdit('')
+        self.barcodeEntry.returnPressed.connect(self.inputBarcode)
+        
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.barcodeEntry)
+        layout.addStretch(1)
+        self.setLayout(layout)
+    
+    def inputBarcode(self):
+        try:
+            code = str(self.barcodeEntry.text())
+            self.__librarian.handleCode(code)
+        except librarian.OperationException as error:
+            QtGui.QMessageBox.information(self,
+                                          "Inable to process barcode",
+                                          "The librarian reported a problem while processing your barcode entry: %s" % error,
+                                           QtGui.QMessageBox.Ok)
+        self.barcodeEntry.clear()
