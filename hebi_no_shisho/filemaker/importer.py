@@ -38,7 +38,7 @@ class MediaDataImporter:
             try:
                 self._import_row(row)
             except DataImportError as error:
-                print u'Unable to import %s: %s' % (row, error)
+                print 'Unable to import %s: %s' % (row, error)
                 error_count += 1
             except:
                 self.__database.rollback_transaction()
@@ -58,7 +58,7 @@ class MediaDataImporter:
         try:
             isbn = self.demangle_isbn(isbnstring)
         except ISBNDemanglingError as error:
-            raise DataImportError(u'Failed to interpret ISBN number correctly: %s' % error)
+            raise DataImportError('Failed to interpret ISBN number correctly: %s' % error)
         barcode = row.pop('barcode')
         try:
             self.__database.add_book_information(isbn=isbn.isbn, **row)
@@ -93,7 +93,7 @@ class MediaDataImporter:
         except isbn.IsbnError:
             pass
         
-        raise ISBNDemanglingError('%s is not a valid ISBN number' % isbnstring)
+        raise ISBNDemanglingError('Not a valid ISBN number')
 
 class UserDataImporter:
     def __init__(self, database):
@@ -108,7 +108,7 @@ class UserDataImporter:
             try:
                 self._import_row(row)
             except DataImportError as error:
-                print u'Unable to import %s: %s' % (row, error)
+                print 'Unable to import %s: %s' % (row, error)
                 error_count += 1
             except:
                 self.__database.rollback_transaction()
@@ -143,7 +143,7 @@ class LoanDataImporter:
             try:
                 self._import_row(row)
             except DataImportError as error:
-                print u'Unable to import %s: %s' % (row, error)
+                print 'Unable to import %s: %s' % (row, error)
                 error_count += 1
             except:
                 self.__database.rollback_transaction()
