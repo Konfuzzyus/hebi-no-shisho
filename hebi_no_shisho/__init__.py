@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     Hebi no Shisho - A small scale pythonic library management tool
     Copyright (C) 2013 Christian Meyer

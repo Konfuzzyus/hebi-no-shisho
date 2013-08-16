@@ -1,4 +1,4 @@
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 """
     Hebi no Shisho - A small scale pythonic library management tool
     Copyright (C) 2013 Christian Meyer
@@ -32,7 +32,7 @@ def _pull_item(row, key):
 def _convert_to_user_status(status, locked):
     if not locked is None:
         return constants.USER_DELETED
-    if not status is None and status.find('Lehrer') != -1:
+    if not status is None and status.find(u'Lehrer') != -1:
         return constants.USER_TEACHER
     return constants.USER_STUDENT
 
@@ -54,22 +54,22 @@ def extract_media(data):
     
     for row in data:
         entry = {}
-        barcode = _pull_item(row, 'Strichcode Medien')
+        barcode = _pull_item(row, u'Strichcode Medien')
         if not barcode is None:
             barcode = barcode.replace('*', '')
         entry['barcode'] = barcode
-        entry['isbn'] =  _pull_item(row, 'ISBN')
-        entry['title'] =  _pull_item(row, 'Titel')
-        entry['author'] = _pull_item(row, 'Urheber')
-        entry['language'] = _pull_item(row, 'Sprache')
+        entry['isbn'] =  _pull_item(row, u'ISBN')
+        entry['title'] =  _pull_item(row, u'Titel')
+        entry['author'] = _pull_item(row, u'Urheber')
+        entry['language'] = _pull_item(row, u'Sprache')
         entry['summary'] = None
-        entry['subjects'] = _pull_item(row, 'Schlagwort')
-        dewey, signature = _unmangle_signature(_pull_item(row, 'Signatur'))
+        entry['subjects'] = _pull_item(row, u'Schlagwort')
+        dewey, signature = _unmangle_signature(_pull_item(row, u'Signatur'))
         entry['dewey'] = dewey
         entry['signature'] = signature
-        entry['publisher_name'] = _pull_item(row, 'Verlag')
-        entry['notes'] = _pull_item(row, 'Bemerkungen')
-        entry['edition'] = _pull_item(row, 'Auflage')
+        entry['publisher_name'] = _pull_item(row, u'Verlag')
+        entry['notes'] = _pull_item(row, u'Bemerkungen')
+        entry['edition'] = _pull_item(row, u'Auflage')
         entry['physical_description'] = None
         converted.append(entry)
     
@@ -80,15 +80,15 @@ def extract_users(data):
     
     for row in data:
         entry = {}
-        entry['first_name'] = _pull_item(row, 'Vorname')
-        entry['last_name'] = _pull_item(row, 'Name')
-        entry['form'] = _pull_item(row, 'Klasse')
-        barcode = _pull_item(row, 'Benutzercode')
+        entry['first_name'] = _pull_item(row, u'Vorname')
+        entry['last_name'] = _pull_item(row, u'Name')
+        entry['form'] = _pull_item(row, u'Klasse')
+        barcode = _pull_item(row, u'Benutzercode')
         if not barcode is None:
             barcode = barcode.replace('*', '')
         entry['barcode'] = barcode
         entry['birthday'] = None
-        entry['status'] = _convert_to_user_status(_pull_item(row, 'Benutzerkategorie'), _pull_item(row, 'Benutzer_gesperrt'))
+        entry['status'] = _convert_to_user_status(_pull_item(row, u'Benutzerkategorie'), _pull_item(row, 'Benutzer_gesperrt'))
         converted.append(entry)
     
     return converted
@@ -99,10 +99,10 @@ def extract_loans(data):
     
     for row in data:
         entry = {}
-        entry['loanDate'] = _convert_date(_pull_item(row, 'Ausleihdatum'))
-        entry['returnDate'] = _convert_date(_pull_item(row, 'Rückgabedatum'))
-        entry['book_code'] = _pull_item(row, 'NR Zugang')
-        entry['borrower_code'] = _pull_item(row, 'Ausleihperson')
+        entry['loanDate'] = _convert_date(_pull_item(row, u'Ausleihdatum'))
+        entry['returnDate'] = _convert_date(_pull_item(row, u'RÃ¼ckgabedatum'))
+        entry['book_code'] = _pull_item(row, u'NR Zugang')
+        entry['borrower_code'] = _pull_item(row, u'Ausleihperson')
         converted.append(entry)
     
     return converted
