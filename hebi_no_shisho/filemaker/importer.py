@@ -58,7 +58,7 @@ class MediaDataImporter:
         try:
             isbn = self.demangle_isbn(isbnstring)
         except ISBNDemanglingError as error:
-            raise DataImportError('Failed to interpret ISBN number correctly: %s' % error)
+            raise DataImportError(u'Failed to interpret ISBN number correctly: %s' % error)
         barcode = row.pop('barcode')
         try:
             self.__database.add_book_information(isbn=isbn.isbn, **row)
