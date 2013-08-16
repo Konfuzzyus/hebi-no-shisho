@@ -35,6 +35,7 @@ class Librarian():
         self.__database = database
         self.__state = STATE_IDLE
         self.__borrower_code = None
+        self.__last_book_code = None
     
     def handleCode(self, code):
         if self.__state == STATE_BORROW:

@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 from hebi_no_shisho.gui import adminwindow
 from hebi_no_shisho.library import librarian
 
@@ -25,6 +25,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self, database):
         super(MainWindow, self).__init__()
         self.__database = database
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
         self.createMainLayout()
         self.createActions()
@@ -34,10 +35,20 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowTitle("Hebi-no-Shisho")
         self.setMinimumSize(160, 160)
         self.resize(480, 320)
+        
+    def focusInEvent(self, event):
+        self.updateCentralWidget()
+        
+    def updateCentralWidget(self):
+        if self.__database.is_valid():
+            self.__operator.setVisible(True)
+        else:
+            self.__operator.setVisible(False)
     
     def createMainLayout(self):
-        operator = LibraryOperator(self.__database)
-        self.setCentralWidget(operator)
+        self.__operator = LibraryOperator(self.__database)
+        self.setCentralWidget(self.__operator)
+        self.updateCentralWidget()
 
     def createActions(self):
         self.actAdmin = QtGui.QAction("Administration",
