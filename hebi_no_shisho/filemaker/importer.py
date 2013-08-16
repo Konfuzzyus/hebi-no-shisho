@@ -116,7 +116,7 @@ class UserDataImporter:
             progress_count += 1
         self.__database.commit_transaction()
             
-        print 'Failed to import %d of %d rows % (error_count, len(data))
+        print 'Failed to import %d of %d rows' % (error_count, len(data))
     
     def _import_row(self, row):
         if not 'first_name' in row or row['first_name'] is None:
