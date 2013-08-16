@@ -137,9 +137,11 @@ class LibraryOperator(QtGui.QWidget):
         
         self.barcodeEntry = QtGui.QLineEdit('')
         self.barcodeEntry.returnPressed.connect(self.inputBarcode)
+        self.statusDescription = QtGui.QLabel(self.__librarian.getStateDescription())
         
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.barcodeEntry)
+        layout.addWidget(self.statusDescription)
         layout.addStretch(1)
         self.setLayout(layout)
     
@@ -153,3 +155,4 @@ class LibraryOperator(QtGui.QWidget):
                                           "The librarian reported a problem while processing your barcode entry: %s" % error,
                                            QtGui.QMessageBox.Ok)
         self.barcodeEntry.clear()
+        self.statusDescription.setText(self.__librarian.getStateDescription())

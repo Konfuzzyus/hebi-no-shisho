@@ -106,6 +106,9 @@ class Database():
         except dberrors.DuplicateEntryError:
             raise DatabaseIntegrityError('Given barcode already exists in database')
 
+    def get_user(self, user_code):
+        return User.select(User.q.barcode == user_code, connection=self._get_transaction()).getOne(None)
+
     def add_loan(self, book_code, borrower_code, **kwargs):
         borrower = User.select(User.q.barcode == borrower_code, connection=self._get_transaction()).getOne(None)
         if borrower is None:

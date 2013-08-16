@@ -38,17 +38,18 @@ class Librarian():
     
     def handleCode(self, code):
         if self.__state == STATE_BORROW:
-            self.processBorrow(code)
+            self._processBorrow(code)
         else:
-            self.processIdle(code)
+            self._processIdle(code)
     
-    def processIdle(self, code):
+    def _processIdle(self, code):
         codetype = self.getCodeType(code)
         if codetype != CODE_USER:
             raise OperationException('Given code is not a user')
         self.__borrower_code = code
+        self.__state = STATE_BORROW
         
-    def processBorrow(self, code):
+    def _processBorrow(self, code):
         codetype = self.getCodeType(code)
         if codetype == CODE_USER:
             self.__borrower_code = code
@@ -62,6 +63,21 @@ class Librarian():
             return CODE_USER
         else:
             return CODE_UNKNOWN
+    
+    def getBorrowerDescription(self):
+        if self.__borrower_code == None:
+            return 'Nobody'
+        else:
+            user = self.__database.get_user(self.__borrower_code)
+            return '%s %s - %s' % (user.first_name, user.last_name, user.form)
+        
+    def getStateDescription(self):
+        if self.__state == STATE_IDLE:
+            return 'Waiting for Input'
+        elif self.__state == STATE_BORROW:
+            return 'Borrowing books to %s' % self.getBorrowerDescription()
+        else:
+            return 'Unknown state'
     
     def borrow(self, book_code, borrower_code):
         try:
