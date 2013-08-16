@@ -18,8 +18,10 @@
 """
 
 from hebi_no_shisho.library import constants
-import re
+from hebi_no_shisho.data import database
 from datetime import datetime
+import re
+
 
 def _pull_item(row, key):
     item = ' '.join(row[key]).strip()
@@ -45,7 +47,7 @@ def _convert_date(raw_date):
     if raw_date is None:
         return raw_date
     parsed_date = datetime.strptime(raw_date, '%d.%m.%Y')
-    return parsed_date.strftime('%Y-%m-%d')
+    return parsed_date.strftime(database.date_format)
 
 def extract_media(data):
     converted = []

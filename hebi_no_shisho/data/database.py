@@ -23,6 +23,8 @@ from hebi_no_shisho.library import constants
 
 from passlib.hash import sha256_crypt
 
+date_format = '%Y-%m-%d'
+
 class PermissionViolation(Exception):
     pass
 
@@ -95,45 +97,48 @@ class Database():
         Inventory.createTable(ifNotExists=True)
     
     def add_user(self, first_name, last_name, **kwargs):
-        result = User.select(AND(User.q.first_name == first_name,User.q.last_name == last_name), connection=self.__transaction).getOne(None)
+        result = User.select(AND(User.q.first_name == first_name,User.q.last_name == last_name), connection=self._get_transaction()).getOne(None)
         try:
             if result is None:
-                User(first_name=first_name, last_name=last_name, connection=self.__transaction, **kwargs)
+                User(first_name=first_name, last_name=last_name, connection=self._get_transaction(), **kwargs)
             else:
-                result.set(**kwargs)
+                result.set(connection=self._get_transaction(), **kwargs)
         except dberrors.DuplicateEntryError:
             raise DatabaseIntegrityError('Given barcode already exists in database')
 
     def add_loan(self, book_code, borrower_code, **kwargs):
-        borrower = User.select(User.q.barcode == borrower_code, connection=self.__transaction).getOne(None)
+        borrower = User.select(User.q.barcode == borrower_code, connection=self._get_transaction()).getOne(None)
         if borrower is None:
             raise DatabaseIntegrityError('Given borrower not present in database')
-        book = Inventory.select(Inventory.q.barcode == book_code, connection=self.__transaction).getOne(None)
+        book = Inventory.select(Inventory.q.barcode == book_code, connection=self._get_transaction()).getOne(None)
         if book is None:
             raise DatabaseIntegrityError('Given book not present in database')
-        Loan(bookID=book.id, borrowerID=borrower.id, **kwargs)
+        Loan(bookID=book.id, borrowerID=borrower.id, connection=self._get_transaction(), **kwargs)
 
     def add_book_information(self, isbn, **kwargs):
-        result = Media.select(Media.q.isbn == isbn, connection=self.__transaction).getOne(None)
+        result = Media.select(Media.q.isbn == isbn, connection=self._get_transaction()).getOne(None)
         if result is None:
-            Media(isbn=isbn, connection=self.__transaction, **kwargs)
+            Media(isbn=isbn, connection=self._get_transaction(), **kwargs)
         else:
             result.set(**kwargs)
 
     def add_book_exemplary(self, barcode, isbn):
-        result = Media.select(Media.q.isbn == isbn, connection=self.__transaction).getOne(None)
+        result = Media.select(Media.q.isbn == isbn, connection=self._get_transaction()).getOne(None)
         if result is None:
             raise DatabaseIntegrityError('Requested ISBN information missing from database')
         try:
-            insert = sqlbuilder.Insert('Inventory', values={'barcode': barcode, 'info_id': result.id})
-            if self.__transaction is None:
-                connection = sqlhub.getConnection()
-            else:
-                connection = self.__transaction
-            query = connection.sqlrepr(insert)
-            connection.query(query)
+            Inventory(barcode=barcode, infoID=result.id, connection=self._get_transaction())
         except dberrors.DuplicateEntryError:
             raise DatabaseIntegrityError('Given barcode already exists in database')
+    
+    def is_on_loan(self, book_code):
+        book = Inventory.select(Inventory.q.barcode == book_code, connection=self._get_transaction()).getOne(None)
+        if book is None:
+            raise DatabaseIntegrityError('Given barcode is not present in database')
+        loans = Loan.select(AND(Loan.q.book == book.id, Loan.q.returnDate == None))
+        if loans.count() > 0:
+            return True
+        return False
     
     def get_userlist(self):
         mylist = userlist.UserList()
@@ -146,6 +151,12 @@ class Database():
                             birthday=result.birthday,
                             barcode=result.barcode)
         return mylist
+    
+    def _get_transaction(self):
+        if self.__transaction is None:
+            return sqlhub.getConnection()
+        else:
+            return self.__transaction
     
     def begin_transaction(self):
         if not self.__transaction is None:
