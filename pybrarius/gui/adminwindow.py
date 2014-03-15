@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    Hebi no Shisho - A small scale pythonic library management tool
-    Copyright (C) 2013 Christian Meyer
+    Pybrarius - A small scale pythonic library management tool
+    Copyright (C) 2013 - 2014 Christian Meyer
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
 """
 
 from PyQt4 import QtGui
-from hebi_no_shisho.filemaker import importer, conversion, xmlloader
-from hebi_no_shisho.printing import roster
+from pybrarius.filemaker import importer, conversion, xmlloader
+from pybrarius.printing import roster
 
 class AdminWindow(QtGui.QDialog):
 

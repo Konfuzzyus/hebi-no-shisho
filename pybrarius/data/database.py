@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    Hebi no Shisho - A small scale pythonic library management tool
-    Copyright (C) 2013 Christian Meyer
+    Pybrarius - A small scale pythonic library management tool
+    Copyright (C) 2013 - 2014 Christian Meyer
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 from sqlobject import * #@UnusedWildImport
 import os
-from hebi_no_shisho.data import userlist
-from hebi_no_shisho.library import constants
+from pybrarius.data import userlist
+from pybrarius.library import constants
 
 from passlib.hash import sha256_crypt
 

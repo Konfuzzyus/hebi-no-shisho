@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    Hebi no Shisho - A small scale pythonic library management tool
-    Copyright (C) 2013 Christian Meyer
+    Pybrarius - A small scale pythonic library management tool
+    Copyright (C) 2013 - 2014 Christian Meyer
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,3 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
+USER_DELETED = "Deleted"
+USER_TEACHER = "Teacher"
+USER_STUDENT = "Student"
