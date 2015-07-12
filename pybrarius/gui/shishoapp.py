@@ -17,12 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 from pybrarius.gui import mainwindow
 from pybrarius.data import database
 import os
 
-class ShishoApplication(QtGui.QApplication):
+class ShishoApplication(QtWidgets.QApplication):
     def __init__(self, *args, **kw):
         super(ShishoApplication, self).__init__(*args, **kw)
         

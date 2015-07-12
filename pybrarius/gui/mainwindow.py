@@ -17,11 +17,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 from pybrarius.gui import adminwindow
 from pybrarius.library import librarian
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, database):
         super(MainWindow, self).__init__()
@@ -52,22 +52,22 @@ class MainWindow(QtGui.QMainWindow):
         self.updateCentralWidget()
 
     def createActions(self):
-        self.actAdmin = QtGui.QAction("Administration",
+        self.actAdmin = QtWidgets.QAction("Administration",
                                       self,
                                       statusTip="Enter database administration mode",
                                       triggered=self.startAdministration)
 
-        self.actExit = QtGui.QAction("&Quit",
+        self.actExit = QtWidgets.QAction("&Quit",
                                      self,
                                      shortcut="Ctrl+Q",
                                      statusTip="Quit the application",
                                      triggered=self.close)
 
-        self.actAbout = QtGui.QAction("About",
+        self.actAbout = QtWidgets.QAction("About",
                                       self,
                                       statusTip="About Hebi-no-Shisho",
                                       triggered=self.showAbout)
-        self.actAboutQt = QtGui.QAction("About Qt",
+        self.actAboutQt = QtWidgets.QAction("About Qt",
                                         self,
                                         statusTip="About Qt",
                                         triggered=self.showAboutQt)
@@ -87,7 +87,7 @@ class MainWindow(QtGui.QMainWindow):
         self.__admindialog.setModal(True)
 
     def startAdministration(self):
-        diag = QtGui.QInputDialog()
+        diag = QtWidgets.QInputDialog()
         
         if self.__database.is_valid():
             prompt = "Enter password for existing database:"
@@ -98,7 +98,7 @@ class MainWindow(QtGui.QMainWindow):
         entered_password, ok = diag.getText(self,
                                             "Administration Mode",
                                             prompt,
-                                            mode=QtGui.QLineEdit.Password)
+                                            echo=QtWidgets.QLineEdit.Password)
         if ok:
             if accessCheck(entered_password):
                 self.__admindialog.show()
@@ -107,32 +107,32 @@ class MainWindow(QtGui.QMainWindow):
         if self.__database.check_password(str(password)):
             return True
         else:
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           "Access denied",
                                           "Invalid password entered",
-                                          QtGui.QMessageBox.Ok)
+                                          QtWidgets.QMessageBox.Ok)
             return False
 
     def accessNewDatabase(self, new_password):
-        diag = QtGui.QInputDialog()
+        diag = QtWidgets.QInputDialog()
         entered_password, ok = diag.getText(self,
                                             "Administration Mode",
                                             "Please re-enter your password to confirm creation of the database:",
-                                            mode=QtGui.QLineEdit.Password)
+                                            echo=QtWidgets.QLineEdit.Password)
         if ok:
             if new_password == entered_password:
                 self.__database.reset_database(str(new_password))
                 return True
             else:
-                QtGui.QMessageBox.information(self,
+                QtWidgets.QMessageBox.information(self,
                                               "Database creation failure",
                                               "The passwords you entered did not match.",
-                                              QtGui.QMessageBox.Ok)
+                                              QtWidgets.QMessageBox.Ok)
                 return False
         return False
 
     def showAbout(self):
-        QtGui.QMessageBox.about(self,
+        QtWidgets.QMessageBox.about(self,
                                 "About Hebi-no-Shisho",
                                 "<h3>Hebi-no-Shisho</h3>"
                                 "Copyright (C) 2013 - 2014 - Christian Meyer<br>"
@@ -140,18 +140,18 @@ class MainWindow(QtGui.QMainWindow):
                                 "This is free software, and you are welcome to redistribute it under certain conditions")
 
     def showAboutQt(self):
-        QtGui.QMessageBox.aboutQt(self)
+        QtWidgets.QMessageBox.aboutQt(self)
 
-class LibraryOperator(QtGui.QWidget):
+class LibraryOperator(QtWidgets.QWidget):
     def __init__(self, database):
         super(LibraryOperator, self).__init__()
         self.__librarian = librarian.Librarian(database)
         
-        self.barcodeEntry = QtGui.QLineEdit('')
+        self.barcodeEntry = QtWidgets.QLineEdit('')
         self.barcodeEntry.returnPressed.connect(self.inputBarcode)
-        self.statusDescription = QtGui.QLabel(self.__librarian.getStateDescription())
+        self.statusDescription = QtWidgets.QLabel(self.__librarian.getStateDescription())
         
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.barcodeEntry)
         layout.addWidget(self.statusDescription)
         layout.addStretch(1)
@@ -162,9 +162,9 @@ class LibraryOperator(QtGui.QWidget):
             code = str(self.barcodeEntry.text())
             self.__librarian.handleCode(code)
         except librarian.OperationException as error:
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           "Inable to process barcode",
                                           "The librarian reported a problem while processing your barcode entry: %s" % error,
-                                           QtGui.QMessageBox.Ok)
+                                           QtWidgets.QMessageBox.Ok)
         self.barcodeEntry.clear()
         self.statusDescription.setText(self.__librarian.getStateDescription())

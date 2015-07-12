@@ -39,7 +39,7 @@ class MediaDataImporter:
             try:
                 self._import_row(row)
             except DataImportError as error:
-                print 'Unable to import %s: %s' % (row, error)
+                print ('Unable to import %s: %s' % (row, error))
                 error_count += 1
             except:
                 self.__database.rollback_transaction()
@@ -47,7 +47,7 @@ class MediaDataImporter:
             progress_count += 1
         self.__database.commit_transaction()
             
-        print 'Failed to import %d of %d rows' % (error_count, len(data))
+        print ('Failed to import %d of %d rows' % (error_count, len(data)))
     
     def _import_row(self, row):
         if not 'isbn' in row or row['isbn'] is None:
@@ -64,7 +64,7 @@ class MediaDataImporter:
         try:
             self.__database.add_book_information(isbn=isbn.isbn, **row)
         except UnicodeEncodeError as error:
-            print 'Failed to encode %s' % row
+            print ('Failed to encode %s' % row)
             raise
         try:
             self.__database.add_book_exemplary(barcode=barcode, isbn=isbn.isbn)
@@ -109,7 +109,7 @@ class UserDataImporter:
             try:
                 self._import_row(row)
             except DataImportError as error:
-                print 'Unable to import %s: %s' % (row, error)
+                print ('Unable to import %s: %s' % (row, error))
                 error_count += 1
             except:
                 self.__database.rollback_transaction()
@@ -117,7 +117,7 @@ class UserDataImporter:
             progress_count += 1
         self.__database.commit_transaction()
             
-        print 'Failed to import %d of %d rows' % (error_count, len(data))
+        print ('Failed to import %d of %d rows' % (error_count, len(data)))
     
     def _import_row(self, row):
         if not 'first_name' in row or row['first_name'] is None:
@@ -144,7 +144,7 @@ class LoanDataImporter:
             try:
                 self._import_row(row)
             except DataImportError as error:
-                print 'Unable to import %s: %s' % (row, error)
+                print ('Unable to import %s: %s' % (row, error))
                 error_count += 1
             except:
                 self.__database.rollback_transaction()
@@ -152,7 +152,7 @@ class LoanDataImporter:
             progress_count += 1
         self.__database.commit_transaction()
             
-        print 'Failed to import %d of %d rows' % (error_count, len(data))
+        print ('Failed to import %d of %d rows' % (error_count, len(data)))
     
     def _import_row(self, row):
         if not 'book_code' in row or row['book_code'] is None:

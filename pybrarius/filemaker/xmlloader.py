@@ -28,7 +28,7 @@ class FileMakerXMLData:
         self.clear()
         self.ns = {'fmp': 'http://www.filemaker.com/fmpxmlresult'}
         
-        print 'Loading FileMaker data from %(0)s' % {'0': filename}
+        print ('Loading FileMaker data from %(0)s' % {'0': filename})
         if os.path.isfile(filename):
             self.__tree = ET.parse(filename)
         else:
@@ -52,7 +52,7 @@ class FileMakerXMLData:
         
         for field in node.findall('./fmp:FIELD', namespaces=self.ns):
             self.__keys.append(field.attrib['NAME'])
-        print 'Found %(0)d keys: %(1)s' % {'0': len(self.__keys), '1': self.__keys}
+        print ('Found %(0)d keys: %(1)s' % {'0': len(self.__keys), '1': self.__keys})
 
     def __import_resultset(self):
         root = self.__tree.getroot()
@@ -61,12 +61,12 @@ class FileMakerXMLData:
             raise LoadException('XML Data file does not contain a RESULTSET element')
         
         num_rows = int(node.attrib['FOUND'])
-        print 'Found result set containing %(0)d rows' % {'0': num_rows}
+        print ('Found result set containing %(0)d rows' % {'0': num_rows})
         num_loaded = 0
         for row in node.findall('./fmp:ROW', namespaces=self.ns):
             self.__import_row(row)
             num_loaded += 1
-        print 'Loaded a total of %(0)d rows' % {'0': num_loaded}
+        print ('Loaded a total of %(0)d rows' % {'0': num_loaded})
         
     def __import_row(self, row):
         columns = row.findall('./fmp:COL', namespaces=self.ns)
